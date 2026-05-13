@@ -94,6 +94,7 @@ const App = (() => {
   function initLoginPage() {
     // 登录
     document.getElementById('btn-login').addEventListener('click', async () => {
+      if (!Auth.isReady()) { UI.showToast('正在连接服务，请稍后...'); return; }
       const username = document.getElementById('login-username').value.trim();
       const password = document.getElementById('login-password').value;
       if (!username || !password) { UI.showToast('请填写用户名和密码'); return; }
@@ -104,6 +105,7 @@ const App = (() => {
 
     // 注册
     document.getElementById('btn-register').addEventListener('click', async () => {
+      if (!Auth.isReady()) { UI.showToast('正在连接服务，请稍后...'); return; }
       const username = document.getElementById('reg-username').value.trim();
       const password = document.getElementById('reg-password').value;
       const password2 = document.getElementById('reg-password2').value;
@@ -118,6 +120,22 @@ const App = (() => {
     // 切换表单
     document.getElementById('btn-show-register').addEventListener('click', showRegisterForm);
     document.getElementById('btn-show-login').addEventListener('click', showLoginForm);
+
+    // 等待 Firebase 就绪，更新提示文字
+    const descEl = document.getElementById('login-desc-anim');
+    if (!Auth.isReady()) {
+      if (descEl) descEl.textContent = '正在连接服务...';
+      const check = setInterval(() => {
+        if (Auth.isReady()) {
+          clearInterval(check);
+          if (descEl) descEl.textContent = '创建你的 AI 角色，开始聊天吧';
+        }
+      }, 500);
+      setTimeout(() => {
+        clearInterval(check);
+        if (descEl && !Auth.isReady()) descEl.textContent = '网络较慢，请稍后再试';
+      }, 8000);
+    }
   }
 
   function showRegisterForm() {

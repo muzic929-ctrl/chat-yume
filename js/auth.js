@@ -76,5 +76,5 @@ const Auth = (() => {
     });
   }
 
-  return { register, login, logout, getCurrentUser, isLoggedIn, onAuthReady };
+  return { register, login, logout, getCurrentUser, isLoggedIn, onAuthReady, isReady };
 })();
