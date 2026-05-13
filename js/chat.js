@@ -39,15 +39,29 @@ const Chat = (() => {
 
     let html = '';
     let lastDate = '';
+    let lastTime = 0;
+    const GAP = 5 * 60 * 1000; // 5分钟间隔
 
-    messages.forEach(msg => {
+    messages.forEach((msg, i) => {
       const date = new Date(msg.timestamp);
+      const msgTime = date.getTime();
       const dateStr = formatDate(date);
+      const timeStr = formatTime(date);
+
+      // 日期变化
       if (dateStr !== lastDate) {
         html += '<div class="message-time">' + dateStr + '</div>';
         lastDate = dateStr;
+        lastTime = 0; // 新日期重置
       }
-      const timeStr = formatTime(date);
+
+      // 间隔过长显示时间
+      if (i === 0 || msgTime - lastTime > GAP) {
+        html += '<div class="message-time">' + timeStr + '</div>';
+      }
+
+      lastTime = msgTime;
+
       const rowClass = msg.type === 'sent' ? 'sent' : 'received';
       html += '<div class="message-row ' + rowClass + '">';
       html += '<div class="message-bubble">' + escapeHtml(msg.content) + '</div>';
@@ -56,6 +70,11 @@ const Chat = (() => {
 
     container.innerHTML = html;
     scrollToBottom();
+
+    // 聊天页开着 = 已读，退出后不显示未读
+    if (isChatPageVisible() && currentUsername && currentCharacterId) {
+      Characters.markRead(currentUsername, currentCharacterId);
+    }
   }
 
   function formatDate(date) {
@@ -114,6 +133,7 @@ const Chat = (() => {
         Characters.addMessage(currentCharacterId, { content: reply, type: 'received' });
         renderMessages();
         maybeNotify(character, reply);
+        checkAutoSummary();
       } catch (e) {
         hideTyping();
         UI.showToast('AI 回复失败：' + e.message, 2000);
@@ -121,6 +141,7 @@ const Chat = (() => {
         Characters.addMessage(currentCharacterId, { content: fallback, type: 'received' });
         renderMessages();
         maybeNotify(character, fallback);
+        checkAutoSummary();
       }
     } else {
       const history = Characters.getMessages(currentCharacterId);
@@ -132,7 +153,8 @@ const Chat = (() => {
       Characters.addMessage(currentCharacterId, { content: reply, type: 'received' });
       renderMessages();
       maybeNotify(character, reply);
-    }
+	    checkAutoSummary();
+	  }
   }
 
   function showTyping() {
@@ -326,5 +348,65 @@ const Chat = (() => {
     scheduleCharProactive(freshChar, nextUnanswered);
   }
 
-  return { init, sendMessage, clearChat, renderMessages, updateChatHeader, setAvatar, reset, getCurrentCharacterId, startProactive, stopProactive };
+  // ===== 记忆总结 =====
+  async function summarizeMemory(username, charId) {
+    const char = typeof Characters !== 'undefined' ? Characters.getById(username, charId) : null;
+    if (!char) return;
+    const messages = typeof Characters !== 'undefined' ? Characters.getMessages(charId) : [];
+    if (messages.length < 10) { UI.showToast('消息太少，多聊一会儿再总结吧'); return; }
+
+    // 取最近的聊天样本
+    const recent = messages.slice(-40);
+    const dialogue = recent.map(m => (m.type === 'sent' ? '对方' : char.name) + '：' + m.content).join('\n');
+
+    const settings = typeof Storage !== 'undefined'
+      ? Storage.get('settings_' + username, { aiMode: 'simulate' })
+      : { aiMode: 'simulate' };
+
+    let summary;
+    if (settings.aiMode === 'real' && settings.apiKey && typeof AIAPI !== 'undefined') {
+      try {
+        const summarizationPrompt = '请根据以下对话总结记忆。只记录与角色人设相关的关键信息：对方对你的称呼、你们的关系进展、对方的喜好/习惯、重要事件。用2-3句中文简短总结，像日记一样。不要重复角色已有的基础信息。';
+        summary = await AIAPI.sendMessage(settings, char,
+          summarizationPrompt + '\n\n对话记录：\n' + dialogue, []);
+      } catch (e) {
+        summary = buildLocalSummary(char, messages);
+      }
+    } else {
+      summary = buildLocalSummary(char, messages);
+    }
+
+    if (summary && typeof Characters !== 'undefined') {
+      // 累积记忆：旧记忆 + 新总结
+      const oldMemory = char.memory || '';
+      const newMemory = oldMemory
+        ? oldMemory + '\n---\n' + summary
+        : summary;
+      Characters.update(username, charId, { memory: newMemory });
+    }
+  }
+
+  // 本地简单总结
+  function buildLocalSummary(char, messages) {
+    const total = messages.length;
+    const lastFew = messages.slice(-5);
+    const topics = lastFew.map(m => m.content.slice(0, 15)).join('、');
+    return '我们聊了' + total + '条消息，最近在聊关于' + topics + '的话题。';
+  }
+
+  // 自动检查是否需要总结（30条→20条间隔）
+  function checkAutoSummary() {
+    if (!currentUsername || !currentCharacterId) return;
+    const messages = typeof Characters !== 'undefined' ? Characters.getMessages(currentCharacterId) : [];
+    const count = messages.length;
+    const char = typeof Characters !== 'undefined' ? Characters.getById(currentUsername, currentCharacterId) : null;
+    const hasMemory = char && char.memory;
+    // 首次30条触发，之后每20条
+    const threshold = hasMemory ? 20 : 30;
+    if (count > 0 && count % threshold === 0) {
+      setTimeout(() => summarizeMemory(currentUsername, currentCharacterId), 1000);
+    }
+  }
+
+  return { init, sendMessage, clearChat, renderMessages, updateChatHeader, setAvatar, reset, getCurrentCharacterId, startProactive, stopProactive, summarizeMemory };
 })();

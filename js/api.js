@@ -50,6 +50,7 @@ const AIAPI = (() => {
     if (character.routine) prompt += '\n- 作息习惯：' + character.routine;
     if (character.mbtiZodiac) prompt += '\n- MBTI/星座：' + character.mbtiZodiac;
     if (character.notes) prompt += '\n- 备注：' + character.notes;
+    if (character.memory) prompt += '\n\n【你们的共同记忆】' + character.memory;
 
     prompt += `\n\n请完全代入这个角色，用符合你性格和身份的方式与对方聊天。
 回复要简短自然，像真人微信聊天一样，1-3句话即可，不要长篇大论。

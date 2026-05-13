@@ -46,6 +46,7 @@ const UI = (() => {
         document.getElementById('menu-edit-notes').onclick = null;
         document.getElementById('menu-bg-color').onclick = null;
         document.getElementById('menu-bg-upload').onclick = null;
+        document.getElementById('menu-summarize').onclick = null;
         document.getElementById('menu-clear-chat').onclick = null;
         document.getElementById('modal-cancel').onclick = null;
         document.getElementById('modal-overlay').onclick = null;
@@ -53,6 +54,7 @@ const UI = (() => {
       document.getElementById('menu-edit-notes').onclick = () => handler('edit-notes');
       document.getElementById('menu-bg-color').onclick = () => handler('bg-color');
       document.getElementById('menu-bg-upload').onclick = () => handler('bg-upload');
+      document.getElementById('menu-summarize').onclick = () => handler('summarize');
       document.getElementById('menu-clear-chat').onclick = () => handler('clear-chat');
       document.getElementById('modal-cancel').onclick = () => handler('cancel');
       document.getElementById('modal-overlay').onclick = (e) => {

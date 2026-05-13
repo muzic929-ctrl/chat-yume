@@ -1,80 +1,68 @@
-// ===== 用户认证模块 =====
+// ===== 用户认证模块（Firebase Auth） =====
 const Auth = (() => {
 
-  const USERS_KEY = 'users';
-  const SESSION_KEY = 'session';
-
-  // 简单哈希（SHA-256 不可用时用替代方案）
-  async function hashPassword(password) {
-    if (window.crypto && window.crypto.subtle) {
-      try {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(password + 'chat_salt_2026');
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      } catch (e) {
-        // fallback
-      }
-    }
-    // 简单回退哈希
-    let hash = 0;
-    const str = password + 'chat_salt_2026';
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash |= 0;
-    }
-    return 'h_' + Math.abs(hash).toString(16);
-  }
-
+  // 注册
   async function register(username, password) {
     if (!username || !password) return { ok: false, msg: '用户名和密码不能为空' };
     if (username.length < 2) return { ok: false, msg: '用户名至少2个字符' };
     if (password.length < 3) return { ok: false, msg: '密码至少3位' };
 
-    const users = Storage.get(USERS_KEY, []);
-    if (users.find(u => u.username === username)) {
-      return { ok: false, msg: '用户名已存在' };
+    // Firebase Auth 用邮箱格式，我们拼接一个虚拟邮箱
+    const email = username + '@chat-yume.app';
+    try {
+      const result = await FBAuth.createUserWithEmailAndPassword(email, password);
+      // 更新显示名
+      await result.user.updateProfile({ displayName: username });
+      return { ok: true };
+    } catch (e) {
+      if (e.code === 'auth/email-already-in-use') return { ok: false, msg: '用户名已存在' };
+      if (e.code === 'auth/weak-password') return { ok: false, msg: '密码太短，至少6位' };
+      return { ok: false, msg: '注册失败：' + e.message };
     }
-
-    const passwordHash = await hashPassword(password);
-    users.push({
-      username,
-      passwordHash,
-      createdAt: new Date().toISOString()
-    });
-    Storage.set(USERS_KEY, users);
-    return { ok: true };
   }
 
+  // 登录
   async function login(username, password) {
     if (!username || !password) return { ok: false, msg: '请输入用户名和密码' };
-
-    const users = Storage.get(USERS_KEY, []);
-    const user = users.find(u => u.username === username);
-    if (!user) return { ok: false, msg: '用户不存在' };
-
-    const passwordHash = await hashPassword(password);
-    if (user.passwordHash !== passwordHash) return { ok: false, msg: '密码错误' };
-
-    // 保存会话
-    Storage.set(SESSION_KEY, { username, loginTime: new Date().toISOString() });
-    return { ok: true };
+    const email = username + '@chat-yume.app';
+    try {
+      await FBAuth.signInWithEmailAndPassword(email, password);
+      return { ok: true };
+    } catch (e) {
+      if (e.code === 'auth/user-not-found') return { ok: false, msg: '用户不存在' };
+      if (e.code === 'auth/wrong-password') return { ok: false, msg: '密码错误' };
+      if (e.code === 'auth/invalid-credential') return { ok: false, msg: '用户名或密码错误' };
+      return { ok: false, msg: '登录失败：' + e.message };
+    }
   }
 
-  function logout() {
-    Storage.remove(SESSION_KEY);
+  // 退出
+  async function logout() {
+    try { await FBAuth.signOut(); } catch (e) {}
   }
 
+  // 获取当前用户标识（用于 localStorge key）
   function getCurrentUser() {
-    const session = Storage.get(SESSION_KEY, null);
-    return session ? session.username : null;
+    const user = FBAuth.currentUser;
+    return user ? user.displayName || user.email.split('@')[0] : null;
+  }
+
+  function getCurrentUid() {
+    const user = FBAuth.currentUser;
+    return user ? user.uid : null;
   }
 
   function isLoggedIn() {
-    return getCurrentUser() !== null;
+    return FBAuth.currentUser !== null;
   }
 
-  return { register, login, logout, getCurrentUser, isLoggedIn };
+  // 等待认证状态恢复
+  function onAuthReady(callback) {
+    const unsubscribe = FBAuth.onAuthStateChanged(user => {
+      unsubscribe();
+      callback(!!user);
+    });
+  }
+
+  return { register, login, logout, getCurrentUser, getCurrentUid, isLoggedIn, onAuthReady };
 })();

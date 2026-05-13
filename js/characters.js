@@ -58,7 +58,7 @@ const Characters = (() => {
     const index = chars.findIndex(c => c.id === characterId);
     if (index === -1) return null;
 
-    const allowed = ['name', 'gender', 'age', 'height', 'weight', 'personality', 'notes', 'avatar', 'status', 'lastReadTime', 'bgType', 'bgValue', 'bio', 'occupation', 'hometown', 'hobbies', 'catchphrase', 'relationship', 'callMe', 'chatGoal', 'speakingStyle', 'routine', 'mbtiZodiac'];
+    const allowed = ['name', 'gender', 'age', 'height', 'weight', 'personality', 'notes', 'avatar', 'status', 'lastReadTime', 'bgType', 'bgValue', 'bio', 'occupation', 'hometown', 'hobbies', 'catchphrase', 'relationship', 'callMe', 'chatGoal', 'speakingStyle', 'routine', 'mbtiZodiac', 'memory'];
     for (const key of allowed) {
       if (data[key] !== undefined) {
         chars[index][key] = data[key];

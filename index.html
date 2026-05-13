@@ -40,6 +40,8 @@
           <h1>梦世界</h1>
         </div>
         <p class="login-desc" id="login-desc-anim">创建你的 AI 角色，开始聊天吧</p>
+
+        <!-- 登录表单 -->
         <div class="login-form" id="login-form-anim">
           <div class="input-group">
             <input type="text" id="login-username" placeholder="用户名" autocomplete="off">
@@ -48,7 +50,22 @@
             <input type="password" id="login-password" placeholder="密码">
           </div>
           <button class="btn btn-primary btn-block pulse-btn" id="btn-login">登录</button>
-          <button class="btn btn-text btn-block" id="btn-register">没有账号？注册</button>
+          <button class="btn btn-text btn-block" id="btn-show-register">没有账号？注册</button>
+        </div>
+
+        <!-- 注册表单（默认隐藏） -->
+        <div class="login-form" id="register-form-anim" style="display:none">
+          <div class="input-group">
+            <input type="text" id="reg-username" placeholder="用户名" autocomplete="off">
+          </div>
+          <div class="input-group">
+            <input type="password" id="reg-password" placeholder="密码（至少6位）">
+          </div>
+          <div class="input-group">
+            <input type="password" id="reg-password2" placeholder="确认密码">
+          </div>
+          <button class="btn btn-primary btn-block pulse-btn" id="btn-register">注册</button>
+          <button class="btn btn-text btn-block" id="btn-show-login">已有账号？登录</button>
         </div>
       </div>
     </div>
@@ -115,6 +132,7 @@
         <div class="chat-dock">
           <div class="chat-dock-item active" data-tab="chats">
             <span>💬</span><span>聊天</span>
+            <span class="dock-badge" id="chat-badge" style="display:none">0</span>
           </div>
           <div class="chat-dock-item" data-tab="friends">
             <span>👥</span><span>添加好友</span>
@@ -223,6 +241,7 @@
         <div class="modal-option" id="menu-edit-notes">修改备注</div>
         <div class="modal-option" id="menu-bg-color">随机换背景色</div>
         <div class="modal-option" id="menu-bg-upload">从相册上传背景图</div>
+        <div class="modal-option" id="menu-summarize">总结记忆</div>
         <div class="modal-option" id="menu-clear-chat">清空聊天记录</div>
         <div class="modal-cancel" id="modal-cancel">取消</div>
       </div>
@@ -241,6 +260,10 @@
     <div class="toast" id="toast" style="display:none"></div>
   </div>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/auth.js"></script>

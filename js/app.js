@@ -90,22 +90,50 @@ const App = (() => {
     bg.style.display = 'block';
   }
 
-  // ===== 登录页 =====
+  // ===== 登录/注册页 =====
   function initLoginPage() {
+    // 登录
     document.getElementById('btn-login').addEventListener('click', async () => {
       const username = document.getElementById('login-username').value.trim();
       const password = document.getElementById('login-password').value;
+      if (!username || !password) { UI.showToast('请填写用户名和密码'); return; }
       const result = await Auth.login(username, password);
       if (result.ok) { stopParticles(); enterApp(); }
       else UI.showToast(result.msg);
     });
+
+    // 注册
     document.getElementById('btn-register').addEventListener('click', async () => {
-      const username = document.getElementById('login-username').value.trim();
-      const password = document.getElementById('login-password').value;
+      const username = document.getElementById('reg-username').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const password2 = document.getElementById('reg-password2').value;
+      if (!username || !password || !password2) { UI.showToast('请填写所有字段'); return; }
+      if (password.length < 6) { UI.showToast('密码至少需要6位'); return; }
+      if (password !== password2) { UI.showToast('两次密码不一致'); return; }
       const result = await Auth.register(username, password);
-      if (result.ok) { UI.showToast('注册成功'); stopParticles(); enterApp(); }
+      if (result.ok) { UI.showToast('注册成功，请登录'); showLoginForm(); }
       else UI.showToast(result.msg);
     });
+
+    // 切换表单
+    document.getElementById('btn-show-register').addEventListener('click', showRegisterForm);
+    document.getElementById('btn-show-login').addEventListener('click', showLoginForm);
+  }
+
+  function showRegisterForm() {
+    document.getElementById('login-form-anim').style.display = 'none';
+    document.getElementById('register-form-anim').style.display = 'block';
+    document.getElementById('register-form-anim').classList.add('text-anim');
+    document.getElementById('login-desc-anim').textContent = '注册账号，开启你的梦世界之旅';
+  }
+
+  function showLoginForm() {
+    document.getElementById('register-form-anim').style.display = 'none';
+    document.getElementById('login-form-anim').style.display = 'block';
+    document.getElementById('login-desc-anim').textContent = '创建你的 AI 角色，开始聊天吧';
+    document.getElementById('reg-username').value = '';
+    document.getElementById('reg-password').value = '';
+    document.getElementById('reg-password2').value = '';
   }
 
   function triggerLoginAnimations() {
@@ -302,11 +330,11 @@ const App = (() => {
           const messages = Characters.getMessages(char.id);
           const lastMsg = messages.length > 0 ? messages[messages.length - 1] : null;
           const lastMsgText = lastMsg ? (lastMsg.type === 'sent' ? '你：' : '') + lastMsg.content : '点击开始聊天';
-          // 未读判断：有 AI 消息时间 > lastReadTime
-          const hasUnread = messages.some(m => m.type === 'received' && m.timestamp > (char.lastReadTime || ''));
+          // 未读数
+          const unreadCount = messages.filter(m => m.type === 'received' && m.timestamp > (char.lastReadTime || '')).length;
           html += '<div class="char-card" data-id="'+char.id+'">';
           html += '<img class="char-card-avatar" src="'+getAvatarSrc(char.avatar)+'" alt="" onerror="this.src=\x27img/default-avatar.svg\x27">';
-          if (hasUnread) html += '<span class="unread-dot"></span>';
+          if (unreadCount > 0) html += '<span class="unread-badge">'+(unreadCount > 99 ? '99+' : unreadCount)+'</span>';
           html += '<div class="char-card-info">';
           html += '<div class="char-card-name">'+esc(char.notes||char.name)+'</div>';
           html += '<div class="char-card-desc">'+esc(lastMsgText)+'</div>';
@@ -383,15 +411,25 @@ const App = (() => {
         unreadCount += unread;
       });
     }
+
+    // App 桌面图标：综合（未读消息 + 新好友）
     const total = unreadCount + newFriendCount;
     const appBadge = document.getElementById('app-badge');
-    const dockBadge = document.getElementById('dock-badge');
     if (appBadge) {
       if (total > 0) { appBadge.style.display = 'flex'; appBadge.textContent = total > 99 ? '99+' : total; }
       else appBadge.style.display = 'none';
     }
+
+    // Dock 聊天标签：显示总未读消息数
+    const chatBadge = document.getElementById('chat-badge');
+    if (chatBadge) {
+      if (unreadCount > 0) { chatBadge.style.display = 'flex'; chatBadge.textContent = unreadCount > 99 ? '99+' : unreadCount; }
+      else chatBadge.style.display = 'none';
+    }
+    // Dock 添加好友标签：只显示新好友数
+    const dockBadge = document.getElementById('dock-badge');
     if (dockBadge) {
-      if (total > 0) { dockBadge.style.display = 'flex'; dockBadge.textContent = total > 99 ? '99+' : total; }
+      if (newFriendCount > 0) { dockBadge.style.display = 'flex'; dockBadge.textContent = newFriendCount > 99 ? '99+' : newFriendCount; }
       else dockBadge.style.display = 'none';
     }
   }
@@ -529,6 +567,11 @@ const App = (() => {
       document.getElementById('page-chat').style.backgroundColor=c; UI.showToast('背景色已更换');
     }else if(action==='bg-upload'){document.getElementById('input-bg').click();}
     else if(action==='clear-chat'){if(await UI.confirm('确定清空聊天记录？')){Chat.clearChat();UI.showToast('已清空');}}
+    else if(action==='summarize'){
+      UI.showToast('正在总结记忆...', 3000);
+      await Chat.summarizeMemory(username, charId);
+      UI.showToast('记忆已更新');
+    }
   }
 
   function goToChat(charId) {
@@ -608,20 +651,24 @@ const App = (() => {
     updateClock();
     setInterval(updateClock,10000);
     startParticles();
-    if(Auth.isLoggedIn()){
-      stopParticles();
-      document.getElementById('page-login').style.display='none';
-      document.getElementById('lock-screen').style.display='none';
-      document.getElementById('app-shell').style.display='flex';
-      updateStatusClock();
-      setInterval(updateStatusClock,30000);
-      renderCharList();
-      Chat.startProactive();
-    }else{
-      document.getElementById('page-login').style.display='none';
-      document.getElementById('lock-screen').style.display='block';
-      document.getElementById('app-shell').style.display='none';
-    }
+
+    // 等待 Firebase Auth 就绪（跨设备登录核心）
+    Auth.onAuthReady((loggedIn) => {
+      if(loggedIn){
+        stopParticles();
+        document.getElementById('page-login').style.display='none';
+        document.getElementById('lock-screen').style.display='none';
+        document.getElementById('app-shell').style.display='flex';
+        updateStatusClock();
+        setInterval(updateStatusClock,30000);
+        renderCharList();
+        Chat.startProactive();
+      }else{
+        document.getElementById('page-login').style.display='none';
+        document.getElementById('lock-screen').style.display='block';
+        document.getElementById('app-shell').style.display='none';
+      }
+    });
   }
 
   return { init, renderCharList, goToChat };
