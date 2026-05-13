@@ -41,5 +41,26 @@ const Storage = (() => {
     return prefix + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
   }
 
-  return { get, set, remove, genId };
+  // 导出所有数据
+  function exportAll(deviceId) {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(PREFIX)) {
+        data[key] = JSON.parse(localStorage.getItem(key));
+      }
+    }
+    return data;
+  }
+
+  // 导入数据（覆盖）
+  function importAll(deviceId, data) {
+    for (const key in data) {
+      if (key.startsWith(PREFIX)) {
+        localStorage.setItem(key, JSON.stringify(data[key]));
+      }
+    }
+  }
+
+  return { get, set, remove, genId, exportAll, importAll };
 })();
