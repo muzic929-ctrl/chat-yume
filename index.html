@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>梦世界</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- ===== 全局壁纸背景 ===== -->
+    <canvas id="particles-canvas"></canvas>
+    <div class="wallpaper-bg" id="wallpaper-bg"></div>
+
+    <!-- ===== 锁屏层 ===== -->
+    <div id="lock-screen" class="lock-screen">
+      <div class="lock-screen-content" id="lock-screen-content">
+        <div class="lockscreen-top">
+          <div class="lockscreen-time" id="lockscreen-time">12:00</div>
+          <div class="lockscreen-date" id="lockscreen-date">5月13日 星期二</div>
+        </div>
+        <div class="lockscreen-logo">
+          <div class="ls-logo-icon">🌙</div>
+          <div class="ls-logo-text">梦世界</div>
+        </div>
+        <div class="lockscreen-bottom">
+          <div class="slide-hint">
+            <div class="slide-arrow"></div>
+            <span>向上滑动</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 登录表单（锁屏下方） ===== -->
+    <div id="page-login" class="page page-login">
+      <div class="login-form-container">
+        <div class="login-logo" id="login-logo-anim">
+          <div class="logo-icon">🌙</div>
+          <h1>梦世界</h1>
+        </div>
+        <p class="login-desc" id="login-desc-anim">创建你的 AI 角色，开始聊天吧</p>
+        <div class="login-form" id="login-form-anim">
+          <div class="input-group">
+            <input type="text" id="login-username" placeholder="用户名" autocomplete="off">
+          </div>
+          <div class="input-group">
+            <input type="password" id="login-password" placeholder="密码">
+          </div>
+          <button class="btn btn-primary btn-block pulse-btn" id="btn-login">登录</button>
+          <button class="btn btn-text btn-block" id="btn-register">没有账号？注册</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 主应用壳（登录后显示） ===== -->
+    <div id="app-shell" class="app-shell" style="display:none">
+      <!-- 手机桌面 -->
+      <div id="home-screen" class="home-screen">
+        <!-- 顶部状态栏 -->
+        <div class="status-bar">
+          <span class="status-time" id="status-time">12:00</span>
+          <span class="status-icons">📶 🔋</span>
+        </div>
+        <!-- 时间小组件 -->
+        <div class="desktop-widget">
+          <div class="widget-time" id="widget-time">12:00</div>
+          <div class="widget-date" id="widget-date">5月13日 星期二</div>
+        </div>
+        <!-- App 图标区域 -->
+        <div class="app-icons-area">
+          <div class="app-icon-wrapper" data-app="chat">
+            <div class="app-icon" style="background: linear-gradient(135deg, #34c759, #30d158);">
+              <svg viewBox="0 0 48 48" fill="none"><rect x="7" y="10" width="28" height="20" rx="5" fill="rgba(255,255,255,0.95)" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/><path d="M13 18h16M13 24h12" stroke="#34c759" stroke-width="2" stroke-linecap="round"/><rect x="20" y="26" width="22" height="16" rx="4.5" fill="white" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/><path d="M24 31h14M24 36h9" stroke="#30d158" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <span class="app-badge" id="app-badge" style="display:none">0</span>
+            </div>
+            <span class="app-icon-label">聊天</span>
+          </div>
+          <div class="app-icon-wrapper" data-app="create">
+            <div class="app-icon" style="background: linear-gradient(135deg, #5856d6, #af52de);">
+              <svg viewBox="0 0 48 48" fill="none"><path d="M30 8L14 28l-3 9 9-4L36 14l-6-6z" fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="2" stroke-linejoin="round"/><line x1="18" y1="26" x2="24" y2="32" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="28" cy="11" r="3" fill="white" opacity="0.6"/><path d="M34 8l6 6" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <span class="app-icon-label">角色卡</span>
+          </div>
+          <div class="app-icon-wrapper" data-app="settings">
+            <div class="app-icon" style="background: linear-gradient(135deg, #8e8e93, #636366);">
+              <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="6" fill="none" stroke="white" stroke-width="2.2"/><circle cx="24" cy="24" r="2" fill="white"/><path d="M24 8l2 6-2 2-2-2 2-6zM24 40l2-6-2-2-2 2 2 6zM8 24l6 2 2-2-2-2-6 2zM40 24l-6 2-2-2 2-2 6 2zM12.6 12.6l4.2 4.2 2.8-2.8-4.2-4.2-2.8 2.8zM35.4 35.4l-4.2-4.2-2.8 2.8 4.2 4.2 2.8-2.8zM12.6 35.4l4.2-4.2 2.8 2.8-4.2 4.2-2.8-2.8zM35.4 12.6l-4.2 4.2-2.8-2.8 4.2-4.2 2.8 2.8z" fill="white" opacity="0.7"/></svg>
+            </div>
+            <span class="app-icon-label">设置</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 子页面：聊天列表 -->
+      <div id="page-chat-list" class="sub-page" style="display:none">
+        <div class="app-header">
+          <span class="header-back" id="btn-chatlist-back">← 返回</span>
+          <h2 id="chatlist-title">聊天</h2>
+          <span class="header-placeholder"></span>
+        </div>
+        <!-- 聊天列表 -->
+        <div class="char-list" id="char-list"></div>
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">💬</div>
+          <p>还没有聊天</p>
+          <p class="empty-hint">返回桌面点击"角色卡"</p>
+        </div>
+        <!-- 添加好友列表 -->
+        <div class="char-list" id="friend-list" style="display:none"></div>
+        <div class="empty-state" id="friend-empty" style="display:none">
+          <div class="empty-icon">👋</div>
+          <p>没有新的好友请求</p>
+        </div>
+        <!-- 底部 Dock -->
+        <div class="chat-dock">
+          <div class="chat-dock-item active" data-tab="chats">
+            <span>💬</span><span>聊天</span>
+          </div>
+          <div class="chat-dock-item" data-tab="friends">
+            <span>👥</span><span>添加好友</span>
+            <span class="dock-badge" id="dock-badge" style="display:none">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 子页面：设置 -->
+      <div id="page-settings" class="sub-page" style="display:none">
+        <div class="app-header">
+          <span class="header-back" id="btn-settings-back">← 返回</span>
+          <h2>设置</h2>
+          <span class="header-placeholder"></span>
+        </div>
+        <div class="settings-content">
+          <div class="settings-section">
+            <h3>桌面壁纸</h3>
+            <p class="settings-hint">壁纸应用于锁屏和应用背景</p>
+            <button class="btn btn-outline btn-block" id="btn-wallpaper-upload">从相册上传壁纸</button>
+            <button class="btn btn-text btn-block" id="btn-wallpaper-reset">恢复默认粒子背景</button>
+            <input type="file" id="input-wallpaper" accept="image/*" style="display:none">
+          </div>
+          <div class="settings-section">
+            <h3>AI 模式</h3>
+            <div class="toggle-row"><span>免费模拟</span><label class="switch"><input type="checkbox" id="toggle-ai-mode"><span class="slider"></span></label><span>真 AI</span></div>
+            <p class="settings-hint" id="ai-mode-hint">当前：使用免费模拟 AI，无需任何配置</p>
+          </div>
+          <div class="settings-section" id="real-ai-settings" style="display:none">
+            <h3>真 AI 配置</h3>
+            <div class="input-group"><label>模型提供商</label><select id="settings-provider"><option value="openai">OpenAI</option><option value="claude">Claude</option><option value="deepseek">DeepSeek</option><option value="qwen">通义千问</option><option value="zhipu">智谱 ChatGLM</option><option value="moonshot">Kimi</option><option value="doubao">豆包</option><option value="qianfan">文心一言</option><option value="gemini">Gemini</option><option value="custom">自定义</option></select></div>
+            <div class="input-group"><label>API Key</label><input type="password" id="settings-apikey" placeholder="填入你的 API Key"></div>
+            <div class="input-group" id="apiurl-group" style="display:none"><label>API 地址</label><input type="text" id="settings-apiurl" placeholder="https://api.openai.com"></div>
+            <div class="input-group"><label>模型名称（可选）</label><input type="text" id="settings-model" placeholder="默认模型"></div>
+            <p class="settings-hint" id="gemini-hint" style="display:none">Gemini 可用：gemini-2.5-flash / gemini-1.5-flash / gemini-1.5-pro。Key 从 <a href="https://aistudio.google.com/" target="_blank">Google AI Studio</a> 获取。</p>
+            <button class="btn btn-outline btn-block" id="btn-test-api">测试连接</button>
+            <p class="settings-hint">API Key 仅保存在手机本地，不上传服务器</p>
+          </div>
+          <div class="settings-section">
+            <h3>账号</h3>
+            <button class="btn btn-danger btn-block" id="btn-logout">退出登录</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 子页面：创建/编辑角色（覆盖在主应用上） -->
+      <div id="page-form" class="sub-page" style="display:none">
+        <div class="page-header">
+          <span class="header-back" id="btn-form-back">← 返回</span>
+          <h2 id="form-title">角色卡</h2>
+          <span class="header-placeholder"></span>
+        </div>
+        <div class="form-content">
+          <div class="form-avatar-section">
+            <div class="avatar-preview" id="avatar-preview">
+              <img id="avatar-img" src="" alt="头像">
+              <span class="avatar-placeholder">点击设置头像</span>
+            </div>
+            <div class="preset-avatars" id="preset-avatars"></div>
+            <button class="btn btn-outline btn-sm" id="btn-upload-avatar">从相册上传</button>
+            <input type="file" id="input-avatar" accept="image/*" style="display:none">
+          </div>
+          <div class="form-fields">
+            <div class="input-group"><label>姓名 *</label><input type="text" id="form-name" placeholder="请输入角色姓名"></div>
+            <div class="input-group"><label>性别 *</label><select id="form-gender"><option value="">请选择</option><option value="男">男</option><option value="女">女</option><option value="其他">其他</option></select></div>
+            <div class="input-row"><div class="input-group"><label>年龄 *</label><input type="number" id="form-age" placeholder="年龄" min="1" max="200"></div><div class="input-group"><label>身高(cm) *</label><input type="number" id="form-height" placeholder="身高" min="50" max="250"></div></div>
+            <div class="input-group"><label>体重(kg) *</label><input type="number" id="form-weight" placeholder="体重" min="20" max="300"></div>
+            <div class="input-group"><label>性格描述 *</label><textarea id="form-personality" placeholder="请描述角色性格，例如：温柔体贴，善解人意..." rows="3"></textarea></div>
+            <div class="input-group"><label>备注</label><input type="text" id="form-notes" placeholder="给这个角色的备注（可选）"></div>
+            <div class="form-section-title">更多信息（选填，让角色更真实）</div>
+            <div class="input-group"><label>人物描述</label><textarea id="form-bio" placeholder="全面描述这个角色的背景、经历和性格特点..." rows="4"></textarea></div>
+            <div class="input-row"><div class="input-group"><label>职业</label><input type="text" id="form-occupation" placeholder="例如学生、程序员"></div><div class="input-group"><label>家乡</label><input type="text" id="form-hometown" placeholder="例如上海、成都"></div></div>
+            <div class="input-group"><label>兴趣爱好</label><input type="text" id="form-hobbies" placeholder="例如打游戏、跑步、看电影"></div>
+            <div class="input-group"><label>口头禅</label><input type="text" id="form-catchphrase" placeholder="角色经常说的话"></div>
+            <div class="input-row"><div class="input-group"><label>关系类型</label><select id="form-relationship"><option value="">不设定</option><option value="朋友">朋友</option><option value="恋人">恋人</option><option value="暗恋对象">暗恋对象</option><option value="长辈">长辈</option><option value="同事">同事</option><option value="同学">同学</option><option value="网友">网友</option><option value="陌生人">陌生人</option></select></div><div class="input-group"><label>TA怎么称呼你</label><input type="text" id="form-callme" placeholder="例如宝贝、兄弟"></div></div>
+            <div class="input-row"><div class="input-group"><label>说话风格</label><select id="form-speaking-style"><option value="">不设定</option><option value="话多活泼">话多活泼</option><option value="话少简洁">话少简洁</option><option value="温柔体贴">温柔体贴</option><option value="毒舌犀利">毒舌犀利</option><option value="幽默风趣">幽默风趣</option><option value="成熟稳重">成熟稳重</option></select></div><div class="input-group"><label>聊天目的</label><select id="form-chat-goal"><option value="">不设定</option><option value="日常闲聊">日常闲聊</option><option value="情感倾诉">情感倾诉</option><option value="学习交流">学习交流</option><option value="工作讨论">工作讨论</option><option value="角色扮演">角色扮演</option></select></div></div>
+            <div class="input-row"><div class="input-group"><label>作息习惯</label><select id="form-routine"><option value="">不设定</option><option value="夜猫子">夜猫子</option><option value="早起党">早起党</option><option value="规律作息">规律作息</option><option value="日夜颠倒">日夜颠倒</option></select></div><div class="input-group"><label>MBTI / 星座</label><input type="text" id="form-mbti-zodiac" placeholder="例如 INFP / 天蝎座"></div></div>
+          </div>
+          <button class="btn btn-primary btn-block" id="btn-save-char">保存</button>
+          <button class="btn btn-danger btn-block" id="btn-delete-char" style="display:none">删除角色</button>
+        </div>
+      </div>
+
+      <!-- 子页面：聊天 -->
+      <div id="page-chat" class="sub-page" style="display:none">
+        <div class="page-header chat-header">
+          <span class="header-back" id="btn-chat-back">← 返回</span>
+          <div class="chat-header-info">
+            <img class="chat-header-avatar" id="chat-avatar" src="" alt="" style="cursor:pointer" title="点击修改头像">
+            <span id="chat-name">角色名</span>
+          </div>
+          <span class="header-action" id="btn-chat-menu">⋯</span>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-bar">
+          <input type="text" id="chat-input" placeholder="输入消息..." autocomplete="off">
+          <button class="btn btn-primary" id="btn-send">发送</button>
+        </div>
+        <input type="file" id="input-bg" accept="image/*" style="display:none">
+      </div>
+    </div>
+
+    <!-- ===== 弹窗 ===== -->
+    <div class="modal-overlay" id="modal-overlay" style="display:none">
+      <div class="modal-sheet" id="modal-sheet">
+        <div class="modal-option" id="menu-edit-notes">修改备注</div>
+        <div class="modal-option" id="menu-bg-color">随机换背景色</div>
+        <div class="modal-option" id="menu-bg-upload">从相册上传背景图</div>
+        <div class="modal-option" id="menu-clear-chat">清空聊天记录</div>
+        <div class="modal-cancel" id="modal-cancel">取消</div>
+      </div>
+    </div>
+
+    <!-- ===== 消息通知横幅（最顶层） ===== -->
+    <div class="notify-banner" id="notify-banner" style="display:none">
+      <img class="notify-avatar" id="notify-avatar" src="" alt="">
+      <div class="notify-body">
+        <div class="notify-name" id="notify-name"></div>
+        <div class="notify-text" id="notify-text"></div>
+      </div>
+    </div>
+
+    <!-- ===== Toast ===== -->
+    <div class="toast" id="toast" style="display:none"></div>
+  </div>
+
+  <script src="js/ui.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/characters.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
