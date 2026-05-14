@@ -75,6 +75,7 @@ const App = (() => {
     document.getElementById('lock-screen').style.display = 'none';
     document.getElementById('app-shell').style.display = 'flex';
     updateStatusClock();
+    setInterval(updateStatusClock, 10000);
     renderCharList();
     Chat.startProactive();
   }
@@ -126,6 +127,9 @@ const App = (() => {
   function closeApp(pageId) {
     document.getElementById(pageId).style.display = 'none';
     if (pageId === 'page-form' || pageId === 'page-chat-list') renderCharList();
+    // 修复 iOS Safari 白屏：强制重绘
+    var shell = document.getElementById('app-shell');
+    if (shell) { shell.style.display = 'none'; shell.offsetHeight; shell.style.display = 'flex'; }
   }
 
   function closeAllSubPages() {
@@ -424,6 +428,8 @@ const App = (() => {
     const char=Characters.getById(Auth.getCurrentUser(),charId); if(!char)return;
     Characters.markRead(Auth.getCurrentUser(), charId);
     Chat.init(Auth.getCurrentUser(),charId);
+    // 确保头像正确显示（直接从角色数据加载）
+    Chat.setAvatar('chat-avatar', char.avatar);
     const cp=document.getElementById('page-chat');
     if(char.bgType==='image'&&char.bgValue){cp.style.backgroundImage='url('+char.bgValue+')';cp.style.backgroundSize='cover';cp.style.backgroundPosition='center';}
     else{cp.style.backgroundImage='none';cp.style.backgroundColor=char.bgValue||'#f5f5f5';}
@@ -452,7 +458,7 @@ const App = (() => {
     });
     // 导出数据
     document.getElementById('btn-export-data').addEventListener('click', () => {
-      const data = Storage.exportAll(Auth.getCurrentUser());
+      const data = Storage.exportAll();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = 'chat-yume-backup.json';
@@ -468,13 +474,29 @@ const App = (() => {
         try {
           const data = JSON.parse(text);
           if (await UI.confirm('导入将覆盖当前所有数据，确定继续？')) {
-            Storage.importAll(Auth.getCurrentUser(), data);
+            Storage.importAll(data);
             UI.showToast('数据已导入，请刷新页面');
           }
         } catch (err) { UI.showToast('文件格式错误'); }
       };
       input.click();
     });
+
+    // 备份文件夹选择
+    document.getElementById('btn-pick-backup-folder').addEventListener('click', async () => {
+      try {
+        const handle = await window.showDirectoryPicker();
+        window._backupDirHandle = handle;
+        document.getElementById('backup-path').value = handle.name;
+        localStorage.setItem('chat_backup_dir_name', handle.name);
+        UI.showToast('备份文件夹已设置：' + handle.name);
+      } catch (e) {
+        if (e.name !== 'AbortError') UI.showToast('浏览器不支持此功能，请使用电脑端 Chrome');
+      }
+    });
+    // 恢复上次文件夹名
+    const savedDir = localStorage.getItem('chat_backup_dir_name');
+    if (savedDir) document.getElementById('backup-path').value = savedDir + '（需重新选择）';
   }
 
   function getSettings(){
@@ -507,6 +529,16 @@ const App = (() => {
 
   // ===== 初始化 =====
   function init(){
+    // 自动恢复数据（如果被浏览器清理）
+    if (Storage.checkAndRestore(true)) {
+      setTimeout(() => UI.showToast('数据已自动恢复', 2000), 500);
+    } else if (Storage.checkAndRestore(false)) {
+      // 有备份但数据正常 → 显示恢复按钮
+      document.getElementById('btn-restore-lockscreen').style.display = 'inline-block';
+    }
+    // 每5分钟自动备份
+    Storage.startAutoBackup();
+
     generatePresetAvatars();
     initLockScreen();
     initWallpaper();
@@ -521,6 +553,25 @@ const App = (() => {
     // 直接显示锁屏，不需要登录
     document.getElementById('lock-screen').style.display='block';
     document.getElementById('app-shell').style.display='none';
+
+    // 退出页面时自动导出备份
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        const data = Storage.exportAll();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url;
+        a.download = 'chat-yume-auto-' + new Date().toISOString().slice(0,10) + '.json';
+        a.click(); URL.revokeObjectURL(url);
+      }
+    });
+
+    // 锁屏恢复按钮
+    document.getElementById('btn-restore-lockscreen').addEventListener('click', async () => {
+      if (Storage.checkAndRestore() && await UI.confirm('检测到备份数据，是否恢复？')) {
+        UI.showToast('数据已恢复，请滑动进入');
+      }
+    });
   }
 
   return { init, renderCharList, goToChat };

@@ -24,6 +24,7 @@
           <div class="ls-logo-text">梦世界</div>
         </div>
         <div class="lockscreen-bottom">
+          <button class="btn-restore-ls" id="btn-restore-lockscreen" style="display:none">恢复数据</button>
           <div class="slide-hint">
             <div class="slide-arrow"></div>
             <span>向上滑动</span>
@@ -39,7 +40,7 @@
         <!-- 顶部状态栏 -->
         <div class="status-bar">
           <span class="status-time" id="status-time">12:00</span>
-          <span class="status-icons">📶 🔋</span>
+          <span class="status-icons">📶 <span class="backup-spinner" id="backup-spinner" style="display:none"></span> 🔋</span>
         </div>
         <!-- 时间小组件 -->
         <div class="desktop-widget">
@@ -136,6 +137,14 @@
           <div class="settings-section">
             <h3>数据管理</h3>
             <p class="settings-hint">数据仅保存在此设备浏览器中，可导出备份</p>
+            <div class="input-group">
+              <label>备份文件夹</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="text" id="backup-path" placeholder="未设置（默认下载文件夹）" readonly style="flex:1;font-size:13px;">
+                <button class="btn btn-outline btn-sm" id="btn-pick-backup-folder" style="white-space:nowrap">选择文件夹</button>
+              </div>
+            </div>
+            <p class="settings-hint" id="backup-path-hint">仅支持电脑端 Chrome/Edge 浏览器选择文件夹，手机端自动存到下载文件夹</p>
             <button class="btn btn-outline btn-block" id="btn-export-data">导出数据备份</button>
             <button class="btn btn-text btn-block" id="btn-import-data">导入数据恢复</button>
           </div>
